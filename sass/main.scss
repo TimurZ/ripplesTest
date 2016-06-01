@@ -1,0 +1,44 @@
+body {
+	text-align: center;
+	-webkit-tap-highlight-color: transparent;
+}
+
+button {
+	border: none;
+	outline: none;
+	cursor: pointer;
+	background: rebeccapurple;
+	color: white;
+	padding: 18px 60px;
+	border-radius: 2px;
+	font-size: 22px;
+}
+
+.ripple {
+	overflow: hidden;
+	position: relative;
+}
+
+.ripple-effect {
+	position: absolute;
+	border-radius: 50%;
+	background: #fff;
+	opacity: 0.3;
+	pointer-events: none;
+
+	transition: opacity .9s ease-out;
+	animation: ripple-animation .6s forwards;
+}
+
+.ripple-effect-out {
+	opacity: 0;
+}
+
+@keyframes ripple-animation {
+	0% {
+		transform: translate(-50%, -50%) scale(0);
+	}
+	100% {
+		transform: translate(-50%,-50%) scale(1);
+	}
+}
