@@ -9,8 +9,11 @@
 			this.ripplesQueue = [];
 			this.clickFlag = false;
 			this.tapFlag = false;
-			this.rippleEl = null;
+			this.rippleBox = null;
+			// same as longest animation/transition
+			this.remRippleTimeout = 400;
 
+			this.checkClassList();
 			this.listeners();
 		},
 
@@ -18,9 +21,10 @@
 			doc.addEventListener("touchstart", this.delegateCls(".ripple", this.newRipple));
 			doc.addEventListener("mousedown", this.delegateCls(".ripple", this.newRipple));
 
-			doc.addEventListener("touchend", this.delegateCls(".ripple", this.removeRipple));
-			doc.addEventListener("touchcancel", this.delegateCls(".ripple", this.removeRipple));
-			doc.addEventListener("mouseup", this.delegateCls(".ripple", this.removeRipple));
+			// binding ripples obj to remove func
+			doc.addEventListener("touchend", this.removeRipple.bind(this));
+			doc.addEventListener("touchcancel", this.removeRipple.bind(this));
+			doc.addEventListener("mouseup", this.removeRipple.bind(this));
 			doc.addEventListener("mouseout", this.delegateMouseleaveCls(".ripple", this.removeRipple));
 		},
 
@@ -28,49 +32,55 @@
 			if (cls[0] === ".") cls = cls.slice(1);
 
 			return function() {
+				// http://stackoverflow.com/questions/7018919/how-to-bind-touchstart-and-click-events-but-not-respond-to-both
+				// prevents double execution with mouse && touch
+				// don't proceed if there was a click
+				if (ripples.tapFlag) return;
 				var target = arguments[0].target;
 
-				while (target && !ripples.hasClass(target, cls)) {
+				while (!ripples.hasClass(target, cls)) {
 					target = target.parentNode;
+					// prevents classList from throwing an error
+					if (target === doc) return;
 				}
-				if (ripples.hasClass(target, cls)) {
-					func.apply(target, arguments);
-				}
+
+				func.apply(target, arguments);
 			}
 		},
 
 		// https://learn.javascript.ru/mousemove-mouseover-mouseout-mouseenter-mouseleave#делегирование
 		delegateMouseleaveCls: function(cls, func) {
 			return function() {
+				// don't proceed if there wasn't a click
 				if (!ripples.clickFlag) return;
 
 				var relatedTarget = arguments[0].relatedTarget;
-				// can be null
+
 				while (relatedTarget) {
-					if (relatedTarget === ripples.rippleEl) return;
+					if (relatedTarget === ripples.rippleBox) return;
 					relatedTarget = relatedTarget.parentNode;
 				}
 
-				func.apply(ripples.rippleEl, arguments);
+				func.apply(ripples, arguments);
 			}
 		},
 
 		// http://youmightnotneedjquery.com/#has_class
 		hasClass: function(el, cls) {
-			// prevents classList from throwing an error
-			el = el || "";
-			if (el.classList)
-				return el.classList.contains(cls);
-			else
-				return new RegExp('(^| )' + cls + '( |$)', 'gi').test(el.className);
+			return el.classList.contains(cls);
+		},
+
+		checkClassList: function() {
+			if (!doc.documentElement.classList) {
+				this.hasClass = function(el, cls) {
+					return new RegExp('(^| )' + cls + '( |$)', 'gi').test(el.className);
+				}
+			}
 		},
 
 		// thx to https://codepen.io/pixelass/post/material-design-ripple for main idea
 		newRipple: function(e) {
-			// http://stackoverflow.com/questions/7018919/how-to-bind-touchstart-and-click-events-but-not-respond-to-both
-			if (ripples.tapFlag) return;
-			ripples.tapFlag = true;
-
+			// this === rippleBox
 			var posBox = this.getBoundingClientRect(),
 					ePageX = e.pageX || e.touches[0].pageX,
 					ePageY = e.pageY || e.touches[0].pageY,
@@ -94,12 +104,13 @@
 				size: size
 			}, this);
 
+			ripples.tapFlag = true;
 			ripples.clickFlag = true;
-			ripples.rippleEl = this;
+			ripples.rippleBox = this;
 		},
 		
 		appendRipple: function(data, rippleBox) {
-			var ripple = doc.createElement("span"),
+			var ripple = doc.createElement("div"),
 					cssStr = "width:" + data.size + "px;" +
 									 "height:" + data.size + "px;" +
 									 "top:" + data.top + "px;" +
@@ -118,6 +129,7 @@
 
 		removeRipple: function() {
 			var remRipple;
+			// don't proceed if there wasn't a click
 			if (!ripples.clickFlag) return;
 
 			remRipple = ripples.ripplesQueue.pop();
@@ -126,7 +138,8 @@
 				remRipple.className += " ripple-effect-out";
 				// a little bit hacky, but easier and there's less listeners
 				// same as longest animation/transition
-				setTimeout(this.removeChild.bind(this, remRipple), 900);
+				// this === ripples obj
+				setTimeout(this.rippleBox.removeChild.bind(this.rippleBox, remRipple), this.remRippleTimeout);
 			}
 
 			ripples.clickFlag = false;

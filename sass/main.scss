@@ -26,8 +26,8 @@ button {
 	opacity: 0.3;
 	pointer-events: none;
 
-	transition: opacity .9s ease-out;
-	animation: ripple-animation .6s forwards;
+	transition: opacity .4s ease-in;
+	animation: ripple-animation .4s ease-out forwards;
 }
 
 .ripple-effect-out {
