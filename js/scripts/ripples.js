@@ -20,7 +20,6 @@
 		listeners: function() {
 			doc.addEventListener("touchstart", this.delegateCls(".ripple", this.newRipple));
 			doc.addEventListener("mousedown", this.delegateCls(".ripple", this.newRipple));
-
 			// binding ripples obj to remove func
 			doc.addEventListener("touchend", this.removeRipple.bind(this));
 			doc.addEventListener("touchcancel", this.removeRipple.bind(this));
@@ -53,7 +52,6 @@
 			return function() {
 				// don't proceed if there wasn't a click
 				if (!ripples.clickFlag) return;
-
 				var relatedTarget = arguments[0].relatedTarget;
 
 				while (relatedTarget) {
@@ -128,19 +126,15 @@
 		},
 
 		removeRipple: function() {
-			var remRipple;
 			// don't proceed if there wasn't a click
 			if (!ripples.clickFlag) return;
+			// this === ripples obj
+			var remRipple = this.ripplesQueue.pop();
 
-			remRipple = ripples.ripplesQueue.pop();
-
-			if (remRipple) {
-				remRipple.className += " ripple-effect-out";
-				// a little bit hacky, but easier and there's less listeners
-				// same as longest animation/transition
-				// this === ripples obj
-				setTimeout(this.rippleBox.removeChild.bind(this.rippleBox, remRipple), this.remRippleTimeout);
-			}
+			remRipple.className += " ripple-effect-out";
+			// a little bit hacky, but easier and there's less listeners
+			// same as longest animation/transition
+			setTimeout(this.rippleBox.removeChild.bind(this.rippleBox, remRipple), this.remRippleTimeout);
 
 			ripples.clickFlag = false;
 			// http://stackoverflow.com/questions/7018919/how-to-bind-touchstart-and-click-events-but-not-respond-to-both
