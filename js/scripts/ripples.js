@@ -23,6 +23,7 @@
 			// binding ripples obj to remove func
 			doc.addEventListener("touchend", this.removeRipple.bind(this));
 			doc.addEventListener("touchcancel", this.removeRipple.bind(this));
+			doc.addEventListener("scroll", this.removeRipple.bind(this));
 			doc.addEventListener("mouseup", this.removeRipple.bind(this));
 			doc.addEventListener("mouseout", this.delegateMouseleaveCls(".ripple", this.removeRipple));
 		},
