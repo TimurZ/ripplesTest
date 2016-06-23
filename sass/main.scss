@@ -14,6 +14,11 @@ button {
 	font-size: 22px;
 }
 
+// ripple defaults
+$ripple-duration: .4s; // same as remRippleTimeout in js file
+$ripple-color: #fff; // can be overwritten with data-ripple-color attr
+$ripple-opacity: .3;
+
 .ripple {
 	overflow: hidden;
 	position: relative;
@@ -22,19 +27,19 @@ button {
 .ripple-effect {
 	position: absolute;
 	border-radius: 50%;
-	background: #fff;
-	opacity: 0.3;
+	background: $ripple-color;
+	opacity: $ripple-opacity;
 	pointer-events: none;
 
-	transition: opacity .4s ease-in;
-	animation: ripple-animation .4s ease-out forwards;
+	transition: opacity $ripple-duration ease-in;
+	animation: scale-in $ripple-duration ease-out forwards;
 }
 
 .ripple-effect-out {
 	opacity: 0;
 }
 
-@keyframes ripple-animation {
+@keyframes scale-in {
 	0% {
 		transform: scale(0);
 	}
