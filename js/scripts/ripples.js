@@ -39,9 +39,10 @@
 				var target = e.target;
 
 				while (!ripples.hasClass(target, cls)) {
-					target = target.parentNode;
-					// prevents classList from throwing an error
-					if (target === doc) return;
+					target = target.parentElement;
+					// stop function if class wasn't found
+					// documentElement.parentElement will return null
+					if (!target) return;
 				}
 
 				func.apply(target, arguments);
