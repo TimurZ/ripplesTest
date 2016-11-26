@@ -1,7 +1,6 @@
-"use strict";
 {
-	let doc = document,
-			wnd = window;
+	const doc = document;
+	const wnd = window;
 
 	class Ripples {
 		constructor(cls) {
@@ -11,17 +10,16 @@
 			this.tapFlag = false;
 			// same as $ripple-duration in scss file
 			this.removeRippleTimeout = 400;
-
 			this.checkClassList();
 
-			// listeners
+			this.removeRipple = ::this.removeRipple;
+
 			doc.addEventListener("touchstart", this.delegateCls(cls, this.newRipple));
 			doc.addEventListener("mousedown", this.delegateCls(cls, this.newRipple));
-			// bind Ripples obj to the removal func
-			doc.addEventListener("touchend", this.removeRipple.bind(this));
-			doc.addEventListener("touchcancel", this.removeRipple.bind(this));
-			doc.addEventListener("touchmove", this.removeRipple.bind(this));
-			doc.addEventListener("mouseup", this.removeRipple.bind(this));
+			doc.addEventListener("touchend", this.removeRipple);
+			doc.addEventListener("touchcancel", this.removeRipple);
+			doc.addEventListener("touchmove", this.removeRipple);
+			doc.addEventListener("mouseup", this.removeRipple);
 			doc.addEventListener("mouseout", this.delegateMouseleave(this.removeRipple));
 		}
 
@@ -41,12 +39,12 @@
 		delegateCls(cls, func) {
 			if (cls[0] === ".") cls = cls.slice(1);
 
-			return (e) => {
+			return e => {
 				// http://stackoverflow.com/questions/7018919/how-to-bind-touchstart-and-click-events-but-not-respond-to-both
 				// prevents double execution with mouse && touch
 				// don't proceed if there was a click
 				if (this.tapFlag) return;
-				var target = e.target;
+				let target = e.target;
 
 				while (!this.hasClass(target, cls)) {
 					target = target.parentElement;
@@ -61,10 +59,10 @@
 
 		// https://learn.javascript.ru/mousemove-mouseover-mouseout-mouseenter-mouseleave#делегирование
 		delegateMouseleave(func) {
-			return (e) => {
+			return e => {
 				// don't proceed if there wasn't a click
 				if (!this.clickFlag) return;
-				var relatedTarget = e.relatedTarget;
+				let relatedTarget = e.relatedTarget;
 
 				while (relatedTarget) {
 					if (relatedTarget === this.rippleBox) return;
@@ -75,30 +73,30 @@
 			}
 		}
 
-		// // thx to https://codepen.io/pixelass/post/material-design-ripple for main idea
+		// thx to https://codepen.io/pixelass/post/material-design-ripple for main idea
 		newRipple(e, curObj) {
 			// this === .ripple
-			var posBox = this.getBoundingClientRect(),
-					ePageX = e.pageX || e.touches[0].pageX,
-					ePageY = e.pageY || e.touches[0].pageY,
-					posX = ePageX - (posBox.left + wnd.pageXOffset),
-					posY = ePageY - (posBox.top + wnd.pageYOffset),
-					w = this.offsetWidth,
-					h = this.offsetHeight,
-					// distance from the center of the element
-					offsetX = Math.abs(w / 2 - posX),
-					offsetY = Math.abs(h / 2 - posY),
-					// ditance to the farthest side
-					deltaX = w / 2 + offsetX,
-					deltaY = h / 2 + offsetY;
+			const posBox = this.getBoundingClientRect();
+			const ePageX = e.pageX || e.touches[0].pageX;
+			const ePageY = e.pageY || e.touches[0].pageY;
+			const posX = ePageX - (posBox.left + wnd.pageXOffset);
+			const posY = ePageY - (posBox.top + wnd.pageYOffset);
+			const w = this.offsetWidth;
+			const h = this.offsetHeight;
+			// distance from the center of the element
+			const offsetX = Math.abs(w / 2 - posX);
+			const offsetY = Math.abs(h / 2 - posY);
+			// ditance to the farthest side
+			const deltaX = w / 2 + offsetX;
+			const deltaY = h / 2 + offsetY;
 
 			// ditance to the farthest corner
-			var size = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)) * 2;
+			const size = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)) * 2;
 
 			curObj.appendRipple({
 				top: posY,
 				left: posX,
-				size: size
+				size
 			}, this);
 
 			curObj.tapFlag = true;
@@ -107,14 +105,14 @@
 		}
 
 		appendRipple({ top, left, size }, rippleBox) {
-			var ripple = doc.createElement("div"),
-					cssStr = `width: ${size}px;
-										height: ${size}px;
-										top: ${top}px;
-										left: ${left}px;
-										margin-top: ${-size/2}px;
-										margin-left: ${-size/2}px;`,
-					rippleBg = rippleBox.getAttribute("data-ripple-color");
+			const ripple = doc.createElement("div");
+			const cssStr = `width: ${size}px;
+											height: ${size}px;
+											top: ${top}px;
+											left: ${left}px;
+											margin-top: ${-size/2}px;
+											margin-left: ${-size/2}px;`;
+			const rippleBg = rippleBox.getAttribute("data-ripple-color");
 
 			ripple.style.cssText = cssStr;
 			ripple.style.background = rippleBg;
@@ -133,7 +131,6 @@
 
 			// a little bit hacky, but easier and there's less listeners
 			// same as $ripple-duration in scss file or longest animation/transition
-			// bind prevents possible error "the node to be removed is not a child of this node"
 			setTimeout(this.rippleBox.removeChild.bind(this.rippleBox, this.createdRipple), this.removeRippleTimeout);
 
 			this.clickFlag = false;
@@ -142,5 +139,5 @@
 		}
 	}
 
-	let ripples = new Ripples("ripple");
+	const ripples = new Ripples("ripple");
 };

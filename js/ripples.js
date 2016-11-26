@@ -6,8 +6,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 {
 	(function () {
-		var doc = document,
-		    wnd = window;
+		var doc = document;
+		var wnd = window;
 
 		var Ripples = function () {
 			function Ripples(cls) {
@@ -19,17 +19,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				this.tapFlag = false;
 				// same as $ripple-duration in scss file
 				this.removeRippleTimeout = 400;
-
 				this.checkClassList();
 
-				// listeners
+				this.removeRipple = this.removeRipple.bind(this);
+
 				doc.addEventListener("touchstart", this.delegateCls(cls, this.newRipple));
 				doc.addEventListener("mousedown", this.delegateCls(cls, this.newRipple));
-				// bind Ripples obj to the removal func
-				doc.addEventListener("touchend", this.removeRipple.bind(this));
-				doc.addEventListener("touchcancel", this.removeRipple.bind(this));
-				doc.addEventListener("touchmove", this.removeRipple.bind(this));
-				doc.addEventListener("mouseup", this.removeRipple.bind(this));
+				doc.addEventListener("touchend", this.removeRipple);
+				doc.addEventListener("touchcancel", this.removeRipple);
+				doc.addEventListener("touchmove", this.removeRipple);
+				doc.addEventListener("mouseup", this.removeRipple);
 				doc.addEventListener("mouseout", this.delegateMouseleave(this.removeRipple));
 			}
 
@@ -96,27 +95,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					};
 				}
 
-				// // thx to https://codepen.io/pixelass/post/material-design-ripple for main idea
+				// thx to https://codepen.io/pixelass/post/material-design-ripple for main idea
 
 			}, {
 				key: "newRipple",
 				value: function newRipple(e, curObj) {
 					// this === .ripple
-					var posBox = this.getBoundingClientRect(),
-					    ePageX = e.pageX || e.touches[0].pageX,
-					    ePageY = e.pageY || e.touches[0].pageY,
-					    posX = ePageX - (posBox.left + wnd.pageXOffset),
-					    posY = ePageY - (posBox.top + wnd.pageYOffset),
-					    w = this.offsetWidth,
-					    h = this.offsetHeight,
-
+					var posBox = this.getBoundingClientRect();
+					var ePageX = e.pageX || e.touches[0].pageX;
+					var ePageY = e.pageY || e.touches[0].pageY;
+					var posX = ePageX - (posBox.left + wnd.pageXOffset);
+					var posY = ePageY - (posBox.top + wnd.pageYOffset);
+					var w = this.offsetWidth;
+					var h = this.offsetHeight;
 					// distance from the center of the element
-					offsetX = Math.abs(w / 2 - posX),
-					    offsetY = Math.abs(h / 2 - posY),
-
+					var offsetX = Math.abs(w / 2 - posX);
+					var offsetY = Math.abs(h / 2 - posY);
 					// ditance to the farthest side
-					deltaX = w / 2 + offsetX,
-					    deltaY = h / 2 + offsetY;
+					var deltaX = w / 2 + offsetX;
+					var deltaY = h / 2 + offsetY;
 
 					// ditance to the farthest corner
 					var size = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)) * 2;
@@ -134,13 +131,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}, {
 				key: "appendRipple",
 				value: function appendRipple(_ref, rippleBox) {
-					var top = _ref.top;
-					var left = _ref.left;
-					var size = _ref.size;
+					var top = _ref.top,
+					    left = _ref.left,
+					    size = _ref.size;
 
-					var ripple = doc.createElement("div"),
-					    cssStr = "width: " + size + "px;\n\t\t\t\t\t\t\t\t\t\theight: " + size + "px;\n\t\t\t\t\t\t\t\t\t\ttop: " + top + "px;\n\t\t\t\t\t\t\t\t\t\tleft: " + left + "px;\n\t\t\t\t\t\t\t\t\t\tmargin-top: " + -size / 2 + "px;\n\t\t\t\t\t\t\t\t\t\tmargin-left: " + -size / 2 + "px;",
-					    rippleBg = rippleBox.getAttribute("data-ripple-color");
+					var ripple = doc.createElement("div");
+					var cssStr = "width: " + size + "px;\n\t\t\t\t\t\t\t\t\t\t\theight: " + size + "px;\n\t\t\t\t\t\t\t\t\t\t\ttop: " + top + "px;\n\t\t\t\t\t\t\t\t\t\t\tleft: " + left + "px;\n\t\t\t\t\t\t\t\t\t\t\tmargin-top: " + -size / 2 + "px;\n\t\t\t\t\t\t\t\t\t\t\tmargin-left: " + -size / 2 + "px;";
+					var rippleBg = rippleBox.getAttribute("data-ripple-color");
 
 					ripple.style.cssText = cssStr;
 					ripple.style.background = rippleBg;
@@ -162,7 +159,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 					// a little bit hacky, but easier and there's less listeners
 					// same as $ripple-duration in scss file or longest animation/transition
-					// bind prevents possible error "the node to be removed is not a child of this node"
 					setTimeout(this.rippleBox.removeChild.bind(this.rippleBox, this.createdRipple), this.removeRippleTimeout);
 
 					this.clickFlag = false;

@@ -88,7 +88,7 @@ gulp.task('sass', function () {
 gulp.task('js', function() {
 	gulp.src(path.src.js + 'src/**/*.js')
 		.pipe(babel({
-				presets: ['es2015']
+				presets: ['es2015', 'stage-0']
 		}))
 		.pipe(gulp.dest(path.src.js));
 });
