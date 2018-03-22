@@ -5,173 +5,129 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 {
-	(function () {
-		var doc = document;
-		var wnd = window;
+  var doc = document;
 
-		var Ripples = function () {
-			function Ripples(cls) {
-				_classCallCheck(this, Ripples);
+  var Ripples = function () {
+    function Ripples(className) {
+      _classCallCheck(this, Ripples);
 
-				this.createdRipple = null;
-				this.rippleBox = null;
-				this.clickFlag = false;
-				this.tapFlag = false;
-				// same as $ripple-duration in scss file
-				this.removeRippleTimeout = 400;
-				this.checkClassList();
+      this.createdRipple = null;
+      this.rippleBox = null;
+      this.clickFlag = false;
+      this.removeRippleTimeout = 400; // same as $ripple-duration in scss file
+      this.newRipple = this.newRipple.bind(this);
+      this.removeRipple = this.removeRipple.bind(this);
 
-				this.removeRipple = this.removeRipple.bind(this);
+      doc.addEventListener("mousedown", this.delegateClass(className, this.newRipple));
+      doc.addEventListener("mouseup", this.removeRipple);
+      doc.addEventListener("mouseout", this.delegateMouseleave(this.removeRipple));
+    }
 
-				doc.addEventListener("touchstart", this.delegateCls(cls, this.newRipple));
-				doc.addEventListener("mousedown", this.delegateCls(cls, this.newRipple));
-				doc.addEventListener("touchend", this.removeRipple);
-				doc.addEventListener("touchcancel", this.removeRipple);
-				doc.addEventListener("touchmove", this.removeRipple);
-				doc.addEventListener("mouseup", this.removeRipple);
-				doc.addEventListener("mouseout", this.delegateMouseleave(this.removeRipple));
-			}
+    _createClass(Ripples, [{
+      key: "delegateClass",
+      value: function delegateClass(className, cb) {
+        if (className[0] === ".") className = className.slice(1);
 
-			// http://youmightnotneedjquery.com/#has_class
+        return function (e) {
+          var target = e.target;
 
+          while (!target.classList.contains(className)) {
+            target = target.parentElement;
+            // stop function if class wasn't found
+            // documentElement.parentElement will return null
+            if (!target) return;
+          }
+          cb(e, target);
+        };
+      }
 
-			_createClass(Ripples, [{
-				key: "hasClass",
-				value: function hasClass(el, cls) {
-					return el.classList.contains(cls);
-				}
-			}, {
-				key: "checkClassList",
-				value: function checkClassList() {
-					if (!doc.documentElement.classList) {
-						this.hasClass = function (el, cls) {
-							return new RegExp('(^| )' + cls + '( |$)', 'gi').test(el.className);
-						};
-					}
-				}
-			}, {
-				key: "delegateCls",
-				value: function delegateCls(cls, func) {
-					var _this = this;
+      // https://learn.javascript.ru/mousemove-mouseover-mouseout-mouseenter-mouseleave#делегирование
 
-					if (cls[0] === ".") cls = cls.slice(1);
+    }, {
+      key: "delegateMouseleave",
+      value: function delegateMouseleave(cb) {
+        var _this = this;
 
-					return function (e) {
-						// http://stackoverflow.com/questions/7018919/how-to-bind-touchstart-and-click-events-but-not-respond-to-both
-						// prevents double execution with mouse && touch
-						// don't proceed if there was a click
-						if (_this.tapFlag) return;
-						var target = e.target;
+        return function (e) {
+          // don't proceed if there wasn't a click
+          if (!_this.clickFlag) return;
+          var relatedTarget = e.relatedTarget;
 
-						while (!_this.hasClass(target, cls)) {
-							target = target.parentElement;
-							// stop function if class wasn't found
-							// documentElement.parentElement will return null
-							if (!target) return;
-						}
+          while (relatedTarget) {
+            if (relatedTarget === _this.rippleBox) return;
+            relatedTarget = relatedTarget.parentElement;
+          }
 
-						func.call(target, e, _this);
-					};
-				}
+          cb.call(_this);
+        };
+      }
 
-				// https://learn.javascript.ru/mousemove-mouseover-mouseout-mouseenter-mouseleave#делегирование
+      // thx to https://codepen.io/pixelass/post/material-design-ripple for main idea
 
-			}, {
-				key: "delegateMouseleave",
-				value: function delegateMouseleave(func) {
-					var _this2 = this;
+    }, {
+      key: "newRipple",
+      value: function newRipple(e, target) {
+        var posBox = target.getBoundingClientRect();
+        var ePageX = e.pageX || e.touches[0].pageX;
+        var ePageY = e.pageY || e.touches[0].pageY;
+        var posX = ePageX - (posBox.left + window.pageXOffset);
+        var posY = ePageY - (posBox.top + window.pageYOffset);
+        var w = target.offsetWidth;
+        var h = target.offsetHeight;
+        // distance from the center of the element
+        var offsetX = Math.abs(w / 2 - posX);
+        var offsetY = Math.abs(h / 2 - posY);
+        // ditance to the farthest side
+        var deltaX = w / 2 + offsetX;
+        var deltaY = h / 2 + offsetY;
 
-					return function (e) {
-						// don't proceed if there wasn't a click
-						if (!_this2.clickFlag) return;
-						var relatedTarget = e.relatedTarget;
+        // ditance to the farthest corner
+        var size = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)) * 2;
 
-						while (relatedTarget) {
-							if (relatedTarget === _this2.rippleBox) return;
-							relatedTarget = relatedTarget.parentElement;
-						}
+        this.clickFlag = true;
+        this.rippleBox = target;
 
-						func.call(_this2);
-					};
-				}
+        this.appendRipple({
+          top: posY,
+          left: posX,
+          size: size
+        });
+      }
+    }, {
+      key: "appendRipple",
+      value: function appendRipple(_ref) {
+        var top = _ref.top,
+            left = _ref.left,
+            size = _ref.size;
 
-				// thx to https://codepen.io/pixelass/post/material-design-ripple for main idea
+        var ripple = doc.createElement("div");
+        var cssString = "\n        width: " + size + "px;\n        height: " + size + "px;\n        top: " + top + "px;\n        left: " + left + "px;\n        margin-top: " + -size / 2 + "px;\n        margin-left: " + -size / 2 + "px;\n      ";
+        var background = this.rippleBox.getAttribute("data-ripple-color");
 
-			}, {
-				key: "newRipple",
-				value: function newRipple(e, curObj) {
-					// this === .ripple
-					var posBox = this.getBoundingClientRect();
-					var ePageX = e.pageX || e.touches[0].pageX;
-					var ePageY = e.pageY || e.touches[0].pageY;
-					var posX = ePageX - (posBox.left + wnd.pageXOffset);
-					var posY = ePageY - (posBox.top + wnd.pageYOffset);
-					var w = this.offsetWidth;
-					var h = this.offsetHeight;
-					// distance from the center of the element
-					var offsetX = Math.abs(w / 2 - posX);
-					var offsetY = Math.abs(h / 2 - posY);
-					// ditance to the farthest side
-					var deltaX = w / 2 + offsetX;
-					var deltaY = h / 2 + offsetY;
+        ripple.style.cssText = cssString;
+        ripple.style.background = background;
+        ripple.className += " ripple-effect";
 
-					// ditance to the farthest corner
-					var size = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)) * 2;
+        this.rippleBox.appendChild(ripple);
 
-					curObj.appendRipple({
-						top: posY,
-						left: posX,
-						size: size
-					}, this);
+        this.createdRipple = ripple;
+      }
+    }, {
+      key: "removeRipple",
+      value: function removeRipple() {
+        if (!this.clickFlag) return;
+        this.createdRipple.className += " ripple-effect-out";
 
-					curObj.tapFlag = true;
-					curObj.clickFlag = true;
-					curObj.rippleBox = this;
-				}
-			}, {
-				key: "appendRipple",
-				value: function appendRipple(_ref, rippleBox) {
-					var top = _ref.top,
-					    left = _ref.left,
-					    size = _ref.size;
+        // a little bit hacky, but easier and there's less listeners
+        // same as $ripple-duration in scss file or longest animation/transition
+        setTimeout(this.rippleBox.removeChild.bind(this.rippleBox, this.createdRipple), this.removeRippleTimeout);
 
-					var ripple = doc.createElement("div");
-					var cssStr = "width: " + size + "px;\n\t\t\t\t\t\t\t\t\t\t\theight: " + size + "px;\n\t\t\t\t\t\t\t\t\t\t\ttop: " + top + "px;\n\t\t\t\t\t\t\t\t\t\t\tleft: " + left + "px;\n\t\t\t\t\t\t\t\t\t\t\tmargin-top: " + -size / 2 + "px;\n\t\t\t\t\t\t\t\t\t\t\tmargin-left: " + -size / 2 + "px;";
-					var rippleBg = rippleBox.getAttribute("data-ripple-color");
+        this.clickFlag = false;
+      }
+    }]);
 
-					ripple.style.cssText = cssStr;
-					ripple.style.background = rippleBg;
-					ripple.className += " ripple-effect";
+    return Ripples;
+  }();
 
-					rippleBox.appendChild(ripple);
-
-					this.createdRipple = ripple;
-				}
-			}, {
-				key: "removeRipple",
-				value: function removeRipple() {
-					var _this3 = this;
-
-					// this === Ripples object
-					// don't proceed if there wasn't a click
-					if (!this.clickFlag) return;
-					this.createdRipple.className += " ripple-effect-out";
-
-					// a little bit hacky, but easier and there's less listeners
-					// same as $ripple-duration in scss file or longest animation/transition
-					setTimeout(this.rippleBox.removeChild.bind(this.rippleBox, this.createdRipple), this.removeRippleTimeout);
-
-					this.clickFlag = false;
-					// http://stackoverflow.com/questions/7018919/how-to-bind-touchstart-and-click-events-but-not-respond-to-both
-					setTimeout(function () {
-						return _this3.tapFlag = false;
-					}, 100);
-				}
-			}]);
-
-			return Ripples;
-		}();
-
-		var ripples = new Ripples("ripple");
-	})();
+  var ripples = new Ripples("ripple");
 };
